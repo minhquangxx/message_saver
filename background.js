@@ -3,15 +3,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.storage.local.set({ [request.message.id]: request.message.content }, () => {
             console.log("Message saved", request.message);
         });
-    } else if (request.action === "messageDeleted") {
-        chrome.storage.local.get(request.messageId, (result) => {
-            console.log("Deleted message content:", result[request.messageId]);
-        });
-    }
-});
-
-chrome.webNavigation.onCompleted.addListener((details) => {
-    if (details.url.includes('facebook.com') || details.url.includes('messenger.com')) {
-        chrome.tabs.sendMessage(details.tabId, { action: "pageLoaded" });
+    } else if (request.action === "messageRecalled") {
+        console.log("Message recalled", request.messageId, request.originalContent);
+        // Có thể thêm logic để thông báo cho người dùng hoặc lưu trữ riêng tin nhắn đã thu hồi
     }
 });

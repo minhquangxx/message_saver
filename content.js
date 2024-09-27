@@ -1,6 +1,8 @@
 let savedMessages = {};
 
-function saveMessage(messageId, content) {
+function saveMessage(messageElement) {
+    const messageId = messageElement.getAttribute('id');
+    const content = messageElement.textContent;
     savedMessages[messageId] = content;
     chrome.runtime.sendMessage({ action: "saveMessage", message: { id: messageId, content: content } });
 }
@@ -8,34 +10,28 @@ function saveMessage(messageId, content) {
 function observeMessages() {
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        const messages = node.querySelectorAll('[data-testid^="message-container-"]');
-                        messages.forEach((message) => {
-                            const messageId = message.getAttribute('data-testid').split('-').pop();
-                            const content = message.textContent;
-                            saveMessage(messageId, content);
-                        });
-                    }
-                });
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                const messageElement = mutation.target.closest('[data-testid^="message-container-"]');
+                if (messageElement) {
+                    saveMessage(messageElement);
+                    checkForRecalledMessage(messageElement);
+                }
             }
         });
     });
 
-    const config = { childList: true, subtree: true };
+    const config = { childList: true, subtree: true, characterData: true };
     observer.observe(document.body, config);
 }
 
-function checkDeletedMessages() {
-    Object.keys(savedMessages).forEach((messageId) => {
-        const messageElement = document.querySelector(`[data-testid="message-container-${messageId}"]`);
-        if (!messageElement) {
-            console.log(`Message ${messageId} has been deleted`);
-            chrome.runtime.sendMessage({ action: "messageDeleted", messageId: messageId });
-        }
-    });
+function checkForRecalledMessage(messageElement) {
+    const messageId = messageElement.getAttribute('id');
+    const currentContent = messageElement.textContent;
+    if (savedMessages[messageId] && currentContent.includes("đã thu hồi một tin nhắn")) {
+        console.log(`Message ${messageId} has been recalled. Original content: ${savedMessages[messageId]}`);
+        chrome.runtime.sendMessage({ action: "messageRecalled", messageId: messageId, originalContent: savedMessages[messageId] });
+    }
 }
 
-observeMessages();
-setInterval(checkDeletedMessages, 1000);
+// Khởi tạo observer khi trang đã load
+window.addEventListener('load', observeMessages);

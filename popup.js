@@ -1,29 +1,17 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const messageList = document.getElementById('messageList');
-    const clearButton = document.getElementById('clearMessages');
+document.addEventListener('DOMContentLoaded', function () {
+    chrome.storage.local.get(null, function (items) {
+        let messageList = document.getElementById('messageList');
+        for (let id in items) {
+            let li = document.createElement('li');
+            li.textContent = `${id}: ${items[id]}`;
+            messageList.appendChild(li);
+        }
+    });
 
-    function displayMessages() {
-        chrome.storage.local.get({ messages: [] }, (result) => {
-            const messages = result.messages;
+    document.getElementById('clearBtn').addEventListener('click', function () {
+        chrome.storage.local.clear(function () {
+            let messageList = document.getElementById('messageList');
             messageList.innerHTML = '';
-            messages.forEach((message) => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-            <span class="message-type">${message.type}</span>: 
-            <span class="message-text">${message.text}</span><br>
-            <span class="timestamp">${message.timestamp}</span>
-          `;
-                messageList.appendChild(li);
-            });
-        });
-    }
-
-    displayMessages();
-
-    clearButton.addEventListener('click', () => {
-        chrome.storage.local.set({ messages: [] }, () => {
-            console.log('All messages cleared');
-            displayMessages();
         });
     });
 });
