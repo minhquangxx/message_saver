@@ -1,11 +1,12 @@
 {
     "manifest_version": 3,
-    "name": "Advanced Message Saver",
-    "version": "1.1",
-    "description": "Saves all types of Facebook Messenger messages, including deleted ones",
+    "name": "Message Saver",
+    "version": "1.0",
+    "description": "Save Facebook messages including deleted ones",
     "permissions": [
       "storage",
-      "activeTab",
+      "tabs",
+      "webNavigation",
       "webRequest"
     ],
     "host_permissions": [
